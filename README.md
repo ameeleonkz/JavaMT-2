@@ -4,45 +4,17 @@
 
 ## Возможности
 
-- **Observable**: Класс, поддерживающий подписку и отправляющий элементы наблюдателям
+- **Observable**: Класс, поддерживающий подписку и отправляющий элементы наблюдателям. Создается через статический метод `create()`
 - **Observer**: Интерфейс для обработки отправленных элементов, ошибок и сигналов завершения
-- **Subscription**: Управляет состоянием подписки и позволяет наблюдателям отписаться
+- **Disposable**: Современный интерфейс для управления подписками с методами `dispose()` и `isDisposed()`
+- **Subscription**: Альтернативный интерфейс управления подписками (legacy)
 - **Операторы**: Включает различные операторы такие как `map`, `filter`, и `flatMap` для преобразования и фильтрации элементов
-- **Планировщики (Schedulers)**: Предоставляет абстракции для управления выполнением потоков, включая I/O и вычислительное планирование
+- **Планировщики (Schedulers)**: Предоставляет три типа планировщиков:
+  - `IOScheduler` - для I/O операций (CachedThreadPool)
+  - `ComputationScheduler` - для вычислительных задач (FixedThreadPool)
+  - `SingleThreadScheduler` - для выполнения в одном потоке
+- **Управление потоками**: Методы `subscribeOn()` и `observeOn()` для контроля выполнения в разных потоках
 - **Субъекты (Subjects)**: Реализует возможности многоадресной рассылки с `Subject`, `PublishSubject`, и `BehaviorSubject`
-
-## Структура проекта
-
-```
-rxjava-implementation/
-├── src/
-│   ├── main/
-│   │   └── java/
-│   │       └── com/
-│   │           └── rxjava/
-│   │               ├── Observable.java
-│   │               ├── ObservableOnSubscribe.java
-│   │               ├── Observer.java
-│   │               ├── Subscription.java
-│   │               ├── schedulers/
-│   │               │   ├── Scheduler.java
-│   │               │   ├── IOScheduler.java
-│   │               │   └── ComputationScheduler.java
-│   │               └── subjects/
-│   │                   ├── Subject.java
-│   │                   ├── PublishSubject.java
-│   │                   └── BehaviorSubject.java
-│   └── test/
-│       └── java/
-│           └── com/
-│               └── rxjava/
-│                   ├── ObservableTest.java
-│                   ├── OperatorsTest.java
-│                   ├── SubjectsTest.java
-│                   └── SchedulersTest.java
-├── pom.xml
-└── README.md
-```
 
 ## Архитектура системы
 
@@ -71,6 +43,18 @@ public interface Observer<T> {
 - `unsubscribe()` - отписка от Observable
 - `isUnsubscribed()` - проверка состояния подписки
 
+### Управление подписками
+
+Проект поддерживает два интерфейса для управления подписками:
+
+1. **Disposable** (рекомендуемый):
+   - `dispose()` - отменяет подписку
+   - `isDisposed()` - проверяет состояние подписки
+
+2. **Subscription** (legacy):
+   - `unsubscribe()` - отменяет подписку  
+   - `isUnsubscribed()` - проверяет состояние подписки
+
 #### 4. Операторы
 Реализованы как методы Observable, возвращающие новый Observable:
 - `map` - преобразование каждого элемента
@@ -81,14 +65,13 @@ public interface Observer<T> {
 
 Планировщики обеспечивают управление потоками выполнения в реактивных потоках.
 
-### Базовый класс Scheduler
+### Интерфейс Scheduler
+
+Все планировщики реализуют базовый интерфейс `Scheduler`:
 
 ```java
-public abstract class Scheduler {
-    public abstract Executor getExecutor();
-    public void schedule(Runnable action) {
-        getExecutor().execute(action);
-    }
+public interface Scheduler {
+    void execute(Runnable task);
 }
 ```
 

@@ -2,6 +2,7 @@ package com.rxjava;
 
 import java.util.function.Function;
 import java.util.function.Predicate;
+import com.rxjava.schedulers.Scheduler;
 
 public abstract class Observable<T> {
     
@@ -141,6 +142,54 @@ public abstract class Observable<T> {
                         observer.onComplete();
                     }
                 });
+            }
+        };
+    }
+
+    public Observable<T> subscribeOn(Scheduler scheduler) {
+        return new Observable<T>() {
+            @Override
+            public Subscription subscribe(Observer<T> observer) {
+                scheduler.execute(() -> {
+                    Observable.this.subscribe(observer);
+                });
+                return createEmptySubscription();
+            }
+        };
+    }
+
+    public Observable<T> observeOn(Scheduler scheduler) {
+        return new Observable<T>() {
+            @Override
+            public Subscription subscribe(Observer<T> observer) {
+                return Observable.this.subscribe(new Observer<T>() {
+                    @Override
+                    public void onNext(T item) {
+                        scheduler.execute(() -> observer.onNext(item));
+                    }
+                    
+                    @Override
+                    public void onError(Throwable t) {
+                        scheduler.execute(() -> observer.onError(t));
+                    }
+                    
+                    @Override
+                    public void onComplete() {
+                        scheduler.execute(() -> observer.onComplete());
+                    }
+                });
+            }
+        };
+    }
+
+    private Subscription createEmptySubscription() {
+        return new Subscription() {
+            @Override
+            public void unsubscribe() {}
+            
+            @Override
+            public boolean isUnsubscribed() {
+                return true;
             }
         };
     }

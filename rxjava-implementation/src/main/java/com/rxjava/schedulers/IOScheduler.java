@@ -3,7 +3,7 @@ package com.rxjava.schedulers;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-public class IOScheduler extends Scheduler {
+public class IOScheduler implements Scheduler {
     private final Executor executor;
 
     public IOScheduler() {
@@ -11,12 +11,7 @@ public class IOScheduler extends Scheduler {
     }
 
     @Override
-    public void schedule(Runnable task) {
+    public void execute(Runnable task) {
         executor.execute(task);
-    }
-
-    @Override
-    public Executor getExecutor() {
-        return executor;
     }
 }
